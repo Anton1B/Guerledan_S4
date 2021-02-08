@@ -1,0 +1,39 @@
+----- States
+Idle
+Calibration
+TurnLeft
+TurnRight
+StraightLineLeft
+StraightLineRight
+RunStraight
+CheckWall
+CheckTurnDirection
+End
+----- Transitions
+Idle Idle wait robot_cmd_1.doWait
+Idle CheckWall go robot_cmd_1.doCheckWall
+Idle Calibration test robot_cmd_1.doCalibrate
+Calibration Idle stop robot_cmd_1.doWait
+Idle End stop robot_cmd_1.doStop
+CheckWall StraightLineLeft left robot_cmd_1.doFollowLeft
+CheckWall StraightLineRight right robot_cmd_1.doFollowRight
+StraightLineLeft RunStraight go robot_cmd_1.doRun
+StraightLineRight RunStraight go robot_cmd_1.doRun
+RunStraight CheckTurnDirection go robot_cmd_1.doCheckTurnDirection
+CheckTurnDirection TurnLeft left robot_cmd_1.doTurnLeft
+CheckTurnDirection TurnRight right robot_cmd_1.doTurnRight
+CheckTurnDirection End stop robot_cmd_1.doStop
+TurnLeft CheckWall go robot_cmd_1.doCheckWall
+TurnRight CheckWall go robot_cmd_1.doCheckWall
+----- Events
+go
+test
+stop
+left
+right
+---- Start State
+Idle
+---- Start Event
+wait
+---- End State
+End
