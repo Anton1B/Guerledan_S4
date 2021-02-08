@@ -13,7 +13,6 @@ with open("/home/ut/Desktop/data.csv","r") as csv_file:
         Y.append(float(lines[1]))
         Z.append(float(lines[2]))
 
-
 ## Affichage de l'Ellipse
 def dessin(X,Y,Z):
     ellipse = plt.figure()

@@ -35,20 +35,16 @@ with open('data2.csv', 'w', newline='') as csvfile:
     fieldnames = ['vx', 'vy','vz']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-
-
     for i in range (tmax) :
         ledout_values_x = bus.read_i2c_block_data(DEVICE_ADDRESS, OUT_X_L,2)
         x = ledout_values_x[0] + ledout_values_x[1]*256
         if x > 32767 : # 2p15 -1
             x = x - 65536 # 2p16
 
-
         ledout_values_y = bus.read_i2c_block_data(DEVICE_ADDRESS, OUT_Y_L,2)
         y = ledout_values_y[0] + ledout_values_y[1] * 256
         if y > 32767:
             y = y - 65536
-
 
         ledout_values_z = bus.read_i2c_block_data(DEVICE_ADDRESS, OUT_Z_L,2)
         z = ledout_values_z[0] + ledout_values_z[1] * 256
@@ -58,4 +54,3 @@ with open('data2.csv', 'w', newline='') as csvfile:
         writer.writerow({'vx': str(x), 'vy': str(y),'vz' :  str(z)})
         print(x,y,z)
         time.sleep(0.1)
-
