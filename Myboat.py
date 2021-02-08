@@ -44,8 +44,11 @@ OUT_Z_L = 0b00101100
 
 class bateau():
 	def __init__(self):
+		self.vmax = 80
+		self.vmin = 15
+		self.Kregulcap = 1
 		self.bus = smbus.SMBus(1)
-		self.p0 = np.array([[1886],[-3507],[6048.5],[1/3000],[1/3000],[1/3000],[0],[0],[0]]) 
+		self.p0 = np.array([[3383],[-2221],[4617],[1/3070],[1/3070],[1/3070],[0],[0],[0]])
 		self.arduino = ard.init_arduino_line()[0]
 		#basicoffset
 		self.bus.write_byte_data(ACCEL_ADRESS,FIFO_CTRL1, 0b00000000)
@@ -99,7 +102,18 @@ class bateau():
 	def set_speed(self,u1,u2):
 		ard.send_arduino_cmd_motor(self.arduino, u1, u2)
 		return True
-		 
+
+	def regul_cap(self,capd):
+		#capd est le cap consigne
+		e = sawtooth((self.cap() - capd)*2*np.pi/360)
+		#v = ((abs(e)*(self.vmax - self.vmin)) / np.pi) + self.vmin
+		print(e)
+		u1 = min(int(0.5*80*(1 + self.Kregulcap *e)),self.vmax)
+		u2 = min(int(0.5*80*(1 - self.Kregulcap *e)),self.vmax)
+		self.set_speed(u1,u2)
+def sawtooth(x):
+    return (x+2*np.pi)%(2*np.pi)-np.pi
+	 
 def fp(x,p0):
     I1 = np.array([[p0[3,0],p0[6,0],p0[8,0]],
               [p0[6,0],p0[4,0],p0[7,0]],
