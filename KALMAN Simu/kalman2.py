@@ -1,4 +1,6 @@
 # https://pythonrobotics.readthedocs.io/en/latest/modules/localization.html#filter-design
+# http://www.pyrunner.com/weblog/2018/04/12/kalman-example/
+
 
 import numpy as np
 import math
