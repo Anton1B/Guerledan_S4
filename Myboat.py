@@ -107,10 +107,14 @@ class bateau():
 		#capd est le cap consigne
 		e = sawtooth((self.cap() - capd)*2*np.pi/360)
 		#v = ((abs(e)*(self.vmax - self.vmin)) / np.pi) + self.vmin
-		print(e)
 		u1 = min(int(0.5*80*(1 + self.Kregulcap *e)),self.vmax)
 		u2 = min(int(0.5*80*(1 - self.Kregulcap *e)),self.vmax)
 		self.set_speed(u1,u2)
+
+	def safety_turn(self):
+		self.set_speed(50,0)
+	def safety_return(self):
+		self.set_speed(50,50)
 def sawtooth(x):
     return (x+2*np.pi)%(2*np.pi)-np.pi
 	 
