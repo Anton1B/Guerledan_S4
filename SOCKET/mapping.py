@@ -51,7 +51,7 @@ def get_last_line_csv():
 
     # Update last file from boat
     os.system('rsync --rsh="sshpass -p ue32 ssh -l ue32" 172.20.25.210:S4_odo_klein_bet/GPS/data_gps2.csv /home/jvk/Bureau/Guerledan_S4/SOCKET')
-    os.system('sleep $1')
+    # os.system('sleep $1')
     with open("/home/jvk/Bureau/Guerledan_S4/SOCKET/data_gps2.csv","r") as csv_file: # read csv file: GPS log. 
         data = csv_file.readlines() 
     lastRow = data[-1] 
