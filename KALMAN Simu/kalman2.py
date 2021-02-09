@@ -6,12 +6,36 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from roblib_rob import *
+# import mapping
+
+def map_base_nautique():
+    """
+    Draw nautic base of Guerlédan in Matplotlib plot. 
+    """
+    # Creating new plot window.
+    fig, ax = plt.subplots(figsize = (8,7))
+    fig.canvas.set_window_title('Relevé coordonnées GPS')
+
+    # Get OSM map tile and display it using matplotlib library
+    BBox = ((-3.018064498901367,-3.013585209846497,48.19794588711593,48.19947447698833)) # define BBox, the area defined by the map.
+    map = plt.imread("map.png")
+
+    # Plot data.
+    # ax.scatter(Y,X,zorder=1, alpha= 0.2, c="b", s=10)
+
+    # Plot parameters.
+    ax.set_title("Base nautique de Guerlédan")
+    ax.set_xlim(BBox[0],BBox[1])
+    ax.set_ylim(BBox[2],BBox[3])
+
+    ax.imshow(map, zorder=0, extent = BBox, aspect= "equal")
+    return ax
 
 def control():
     """
     Loi de commande. 
     """
-    v = 1.0  # speed constant [m/s]
+    v = 0.0  # speed constant [m/s]
     yawrate = 0  # yaw rate [rad/s]
     u = np.array([[v, yawrate]]).T
     return u
@@ -22,17 +46,23 @@ def observation(xTrue, xd, u):
     """
     xTrue = f(xTrue, u)
 
-    # add noise to gps x-y
-    zx = xTrue[0, 0] + np.random.randn() * Qsim[0, 0]
-    zy = xTrue[1, 0] + np.random.randn() * Qsim[1, 1]
-    z = np.array([[zx, zy]])
+    # Real 
+    zx = -3.0147433333333336 + np.random.randn() * Qsim[0, 0]
+    zy = 48.19892 + np.random.randn() * Qsim[1, 1]
+    z = np.array([[zx, zy]]) # gps data with random noise
 
-    # add noise to input
-    ud1 = u[0, 0] + np.random.randn() * Rsim[0, 0]
-    ud2 = u[1, 0] + np.random.randn() * Rsim[1, 1]
-    ud = np.array([[ud1, ud2]]).T
+    # Simulation : add noise to gps x-y
+    # zx = xTrue[0, 0] + np.random.randn() * Qsim[0, 0]
+    # zy = xTrue[1, 0] + np.random.randn() * Qsim[1, 1]
+    # z = np.array([[zx, zy]]) # gps data with random noise
+    # print(z)
 
-    xd = f(xd, ud)
+    # Simulation: add noise to input
+    ud1 = u[0, 0] #+ np.random.randn() * Rsim[0, 0]
+    ud2 = u[1, 0] #+ np.random.randn() * Rsim[1, 1]
+    ud = np.array([[ud1, ud2]]).T # command u with noise
+
+    xd = f(xd, ud) # euler integration
 
     return xTrue, z, xd, ud
 
@@ -59,7 +89,7 @@ def draw_boat(x,color):
     """
     Drawing the boat. (based on car representation)
     """
-    draw_tank(x,col=color,r=.1,w=1)
+    draw_tank(x,col=color,r=.00001,w=1)
 
 def observation_model(x):
     """
@@ -111,6 +141,8 @@ def ekf_estimation(xEst, PEst, z, u):
 
     #  Predict
     xPred = f(xEst, u)
+    print(xPred)
+
     jF = jacobF(xPred, u)
     PPred = jF.dot(PEst).dot(jF.T) + R
 
@@ -154,7 +186,7 @@ Q = np.diag([1.0, 1.0])**2                          # Observation x,y position c
 R = np.diag([0.1, 0.1, np.deg2rad(1.0), 1.0])**2    # predict state covariance
 
 #  Simulation parameter
-Qsim = np.diag([0.5, 0.5])**2
+Qsim = np.diag([25,25])
 Rsim = np.diag([1.0, np.deg2rad(30.0)])**2
 
 DT = 0.1  # time tick [s]
@@ -167,8 +199,8 @@ if __name__=="__main__":
     time = 0.0
 
     # State Vector [x y yaw v]'
-    xEst = np.zeros((4, 1))
-    xTrue = np.zeros((4, 1))
+    xEst = np.array([[-3.0147433333333336],[48.19892],[0],[0]]) #np.zeros((4, 1)) # estimated state vector
+    xTrue = np.array([[-3.0147433333333336],[48.19892],[0],[0]]) #np.zeros((4, 1)) # true state vector
     PEst = np.eye(4)
 
     xDR = np.zeros((4, 1))  # Dead reckoning
@@ -179,7 +211,10 @@ if __name__=="__main__":
     hxDR = xTrue
     hz = np.zeros((1, 2))
 
+    ax = map_base_nautique()
+
     while SIM_TIME >= time:
+
         time += DT
         u = control()
 
@@ -194,16 +229,17 @@ if __name__=="__main__":
         hz = np.vstack((hz, z))
 
         if show_animation:
-            plt.cla()
-            plt.plot(hz[:, 0], hz[:, 1], ".g")
-            plt.plot(hxTrue[0, :].flatten(),                            # true tajectory
-                     hxTrue[1, :].flatten(), "-b");draw_boat(xTrue,"b");                      
-            # plt.plot(hxDR[0, :].flatten(),
-            #          hxDR[1, :].flatten(), "-k")                      # dead reckoning
+            # plt.cla()
+            # clear(ax)
+            ax.scatter(hz[:, 0], hz[:, 1],zorder=1, alpha= 0.2, c="g", s=10)
+            # plt.plot(hxTrue[0, :].flatten(),                            # true tajectory
+            #          hxTrue[1, :].flatten(), "-b");draw_boat(xTrue,"b");                      
+            # # plt.plot(hxDR[0, :].flatten(),
+            # #          hxDR[1, :].flatten(), "-k")                      # dead reckoning
             plt.plot(hxEst[0, :].flatten(),                             # estimated trajectory
                      hxEst[1, :].flatten(), "-r");draw_boat(xEst,"r");
 
-            plot_covariance_ellipse(xEst, PEst)                         # covariance ellipse
-            plt.axis("equal")
-            plt.grid(True)
-            plt.pause(0.001)
+            # plot_covariance_ellipse(xEst, PEst)                         # covariance ellipse
+            # plt.axis("equal")
+            # plt.grid(True)
+            plt.pause(1)

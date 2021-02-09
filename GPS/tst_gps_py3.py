@@ -14,5 +14,7 @@ with open("data_gps2.csv","w") as csv_file:
         print(data)
         writer.writerow({'x':data[0],'y':data[2],'z':data[4]})
 
+
+
 gpsdrv.close(gps)
 csv_file.close()
