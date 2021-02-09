@@ -2,6 +2,8 @@ import time
 import sys
 import gps_driver_py3 as gpsdrv
 import csv
+import datetime
+
 
 gps = gpsdrv.init_line()
 
@@ -13,8 +15,7 @@ with open("data_gps2.csv","w") as csv_file:
         data = gpsdrv.read_gll(gps)
         print(data)
         writer.writerow({'x':data[0],'y':data[2],'z':data[4]})
-
-
+        csv_file.flush()
 
 gpsdrv.close(gps)
 csv_file.close()

@@ -4,8 +4,9 @@
 
 import numpy as np
 import math
-import matplotlib.pyplot as plt
-from roblib_rob import *
+# import matplotlib.pyplot as plt
+# from roblib_rob import *
+
 # import mapping
 
 def map_base_nautique():
@@ -228,18 +229,18 @@ if __name__=="__main__":
         hxTrue = np.hstack((hxTrue, xTrue))
         hz = np.vstack((hz, z))
 
-        if show_animation:
+        # if show_animation:
             # plt.cla()
             # clear(ax)
-            ax.scatter(hz[:, 0], hz[:, 1],zorder=1, alpha= 0.2, c="g", s=10)
+            # ax.scatter(hz[:, 0], hz[:, 1],zorder=1, alpha= 0.2, c="g", s=10)
             # plt.plot(hxTrue[0, :].flatten(),                            # true tajectory
             #          hxTrue[1, :].flatten(), "-b");draw_boat(xTrue,"b");                      
             # # plt.plot(hxDR[0, :].flatten(),
             # #          hxDR[1, :].flatten(), "-k")                      # dead reckoning
-            plt.plot(hxEst[0, :].flatten(),                             # estimated trajectory
-                     hxEst[1, :].flatten(), "-r");draw_boat(xEst,"r");
+            # plt.plot(hxEst[0, :].flatten(),                             # estimated trajectory
+            #          hxEst[1, :].flatten(), "-r");draw_boat(xEst,"r");
 
             # plot_covariance_ellipse(xEst, PEst)                         # covariance ellipse
             # plt.axis("equal")
             # plt.grid(True)
-            plt.pause(1)
+            # plt.pause(1)

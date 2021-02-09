@@ -2,6 +2,7 @@ import serial
 import os
 import time
 import numpy as np
+
 def latDD(y):
 	D = int(y/100%100) #int(x[0:2])
 	M = int((y-D*100)%100)
