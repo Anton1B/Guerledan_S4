@@ -1,5 +1,5 @@
 import smbus
-import numpy as np
+import numpy as np,cos,sin,arctan2
 import arduino_driver_py3 as ard
 
 DEVICE_ADDRESS = 0x1e      
@@ -42,10 +42,15 @@ OUT_X_L = 0b00101000
 OUT_Y_L = 0b00101010
 OUT_Z_L = 0b00101100
 
+LAT0 = 48.19906500
+LONG0 = -3.01473333
+RAYON_TERRE = 6 371 000 #m
 class bateau():
 	def __init__(self):
 		self.vmax = 80
 		self.vmin = 15
+		self.x = 0
+		self.y = 0
 		self.Kregulcap = 1
 		self.bus = smbus.SMBus(1)
 		self.p0 = np.array([[3383],[-2221],[4617],[1/3070],[1/3070],[1/3070],[0],[0],[0]])
@@ -57,7 +62,6 @@ class bateau():
 		self.bus.write_byte_data(ACCEL_ADRESS,FIFO_CTRL4, 0b00000000)
 		self.bus.write_byte_data(ACCEL_ADRESS,FIFO_CTRL5, 0b00000000)
 		#capteurregl
-
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL1_XL, 0b01010111)
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL2_G, 0b01010000)
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL3_C, 0b00000100)
@@ -69,6 +73,27 @@ class bateau():
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL9_XL, 0b00111000)
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL10_C, 0b00111101)
 
+	def position(self):
+	    val=[0.,'N',0.,'W',0.]
+	    for i in range(nmax):
+		v=ser.readline().decode("utf-8")
+		if str(v[0:6]) == "$GPGLL":
+		    vv = v.split(",")
+		    if len(vv[1]) > 0:
+		       val[0] = float(vv[1])
+		    if len(vv[2]) > 0:
+		        val[1] = vv[2]
+		    if len(vv[3]) > 0:
+		        val[2] = float(vv[3])
+		    if len(vv[4]) > 0:
+		        val[3] = vv[4]
+		    if len(vv[5]) > 0:
+		        val[4] = float(vv[5])
+		    break
+	    lat = val[0]
+	    longi = val[2]
+	    self.x = RAYON_TERRE*cos(longi)*(lat-lat0)
+	    self.y = RAYON_TERRE*(longi-LONG0)
 
 	def cap(self):
 	  self.bus.write_i2c_block_data(DEVICE_ADDRESS, CTRL_REG4, [0b00000000])
@@ -84,7 +109,7 @@ class bateau():
 	  y = ledout_values_y[0] + ledout_values_y[1] * 256
 	  if y > 32767:
 	      y = y - 65536
-	  ledout_values_z = self.bus.read_i2c_block_data(DEVICE_ADDRESS, OUT_Z_L,2)
+	  ledout_values_z = self.bus.read_i2c_block_data(DEVICE_ADDRlatlESS, OUT_Z_L,2)
 	  z = ledout_values_z[0] + ledout_values_z[1] * 256
 	  if z > 32767:
 	      z = z - 65536
@@ -107,10 +132,10 @@ class bateau():
 		#capd est le cap consigne
 		e = sawtooth((self.cap() - capd)*2*np.pi/360)
 		#v = ((abs(e)*(self.vmax - self.vmin)) / np.pi) + self.vmin
-		u1 = min(int(0.5*80*(1 + self.Kregulcap *e)),self.vmax)
-		u2 = min(int(0.5*80*(1 - self.Kregulcap *e)),self.vmax)
+		u1 = max(min(int(0.5*80*(1 + self.Kregulcap *e)),self.vmax),self.vmin)
+		u2 = max(min(int(0.5*80*(1 - self.Kregulcap *e)),self.vmax),self.vmin)
 		self.set_speed(u1,u2)
-
+		
 	def safety_turn(self):
 		self.set_speed(50,0)
 	def safety_return(self):
