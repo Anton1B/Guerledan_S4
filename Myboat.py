@@ -1,7 +1,8 @@
 import smbus
-import numpy as np,cos,sin,arctan2
+import numpy as np
+from numpy import cos,sin,arctan2,pi
 import arduino_driver_py3 as ard
-
+import gps_driver_py3 as gpsdrv
 DEVICE_ADDRESS = 0x1e      
 CTRL_REG1=0x20
 CTRL_REG2=0x21
@@ -42,9 +43,9 @@ OUT_X_L = 0b00101000
 OUT_Y_L = 0b00101010
 OUT_Z_L = 0b00101100
 
-LAT0 = 48.19906500
-LONG0 = -3.01473333
-RAYON_TERRE = 6 371 000 #m
+LAT0 = (48.19906500)*2*pi/360
+LONG0 = (-3.01473333)*2*pi/360
+RAYON_TERRE = 6371000 #m
 class bateau():
 	def __init__(self):
 		self.vmax = 80
@@ -53,6 +54,7 @@ class bateau():
 		self.y = 0
 		self.Kregulcap = 1
 		self.bus = smbus.SMBus(1)
+		self.gps = gpsdrv.init_line()
 		self.p0 = np.array([[3383],[-2221],[4617],[1/3070],[1/3070],[1/3070],[0],[0],[0]])
 		self.arduino = ard.init_arduino_line()[0]
 		#basicoffset
@@ -74,25 +76,10 @@ class bateau():
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL10_C, 0b00111101)
 
 	def position(self):
-	    val=[0.,'N',0.,'W',0.]
-	    for i in range(nmax):
-		v=ser.readline().decode("utf-8")
-		if str(v[0:6]) == "$GPGLL":
-		    vv = v.split(",")
-		    if len(vv[1]) > 0:
-		       val[0] = float(vv[1])
-		    if len(vv[2]) > 0:
-		        val[1] = vv[2]
-		    if len(vv[3]) > 0:
-		        val[2] = float(vv[3])
-		    if len(vv[4]) > 0:
-		        val[3] = vv[4]
-		    if len(vv[5]) > 0:
-		        val[4] = float(vv[5])
-		    break
-	    lat = val[0]
-	    longi = val[2]
-	    self.x = RAYON_TERRE*cos(longi)*(lat-lat0)
+	    val = gpsdrv.read_gll(self.gps)
+	    lat = val[0]*2*pi/360
+	    longi = val[2]*2*pi/360	
+	    self.x = RAYON_TERRE*cos(longi)*(lat-LAT0)
 	    self.y = RAYON_TERRE*(longi-LONG0)
 
 	def cap(self):
@@ -140,6 +127,7 @@ class bateau():
 		self.set_speed(50,0)
 	def safety_return(self):
 		self.set_speed(50,50)
+
 def sawtooth(x):
     return (x+2*np.pi)%(2*np.pi)-np.pi
 	 
