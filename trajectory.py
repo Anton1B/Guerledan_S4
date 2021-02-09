@@ -1,6 +1,7 @@
 from Myboat import bateau
 import time
-
+from numpy import array,arctan2,pi
+from numpy.linalg import norm
 def triangle(bateau):
 	t1 = time.time()
 	while t1+20>time.time():
@@ -20,11 +21,11 @@ def control_potentiel(phat,qhat,x) :
     w = nq/(norm(nq)**3) - 2*(px-phat) #consigne
 
     psi_bar = arctan2(w[1,0],w[0,0])
-    psi_bar = psi_bar*(180/pi) #conversion degrés
+    psi_bar = psi_bar*(180/pi)  #conversion degrés
     return psi_bar
     
-def waypoint(bateau,parcours) :
-	point_id = 0
+def waypoint(Myboat,parcours) :
+	point_id = 1
 	n = len(parcours)-1 
 	
 	first_point = parcours[0]
@@ -34,13 +35,15 @@ def waypoint(bateau,parcours) :
 	
 	t_init = time.time()
 	pt_P = array([[0],[0]])
-	
+	pt_cons = array([[0],[0]])
+	t0 = time.time()
+	sign = 1
 	while (True) :
 	
 		X_bateau = Myboat.state() #récupération de l'état du bateau
-
+		print("X_bateau",X_bateau)
 		#Détermination des points de la ligne actuelle
-		if point_id-1 <0 :
+		if point_id == 0:
 			p1 = parcours[n]
 		else :
 			p1 = parcours[point_id-1]
@@ -67,21 +70,20 @@ def waypoint(bateau,parcours) :
 			offset_y = p2[1,0]
 
 		#Calcul du coefficient directeur
-		if (p1[0,0] > p2[0,0]) :
-			coef = (p1[1,0]-p2[1,0]) / (p1[0,0]-p2[0,0])
-		else :
-			coef = (p2[1,0]-p1[1,0]) / (p2[0,0]-p1[0,0])
-
-		tf = (time.time()-t0) - t_init
-		y = coef*tf #Fonction affine entre 2 points
-
-		pt_cons = array([[tf+offset_x],[y+offset_y]])
-
+		coef = (p1[1,0]-p2[1,0]) / (p1[0,0]-p2[0,0])
+		tf = (time.time()-t0)# - t_init
+		 #Fonction affine entre 2 points
 		if p1[0,0] > p2[0,0] :
-			phat = array([[offset_x-tf],[+offset_y-y]])
+			sign = -1
+		else :
+			sign = 1
+		y = sign*coef*tf
+		pt_cons = array([[sign*tf+offset_x],[y+offset_y]])
+
+		print("objectif",pt_cons)
 
 
-		u = control(pt_cons,pt_P,X_bateau) 
+		u = control_potentiel(pt_cons,pt_P,X_bateau) 
 
 		Myboat.regul_cap(u)
 	

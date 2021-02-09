@@ -1,6 +1,6 @@
 import smbus
 import numpy as np
-from numpy import cos,sin,arctan2,pi
+from numpy import cos,sin,arctan2,pi,array
 import arduino_driver_py3 as ard
 import gps_driver_py3 as gpsdrv
 DEVICE_ADDRESS = 0x1e      
@@ -52,7 +52,7 @@ class bateau():
 		self.vmin = 15
 		self.x = 0
 		self.y = 0
-		self.Kregulcap = 1
+		self.Kregulcap = 0.2
 		self.bus = smbus.SMBus(1)
 		self.gps = gpsdrv.init_line()
 		self.p0 = np.array([[3383],[-2221],[4617],[1/3070],[1/3070],[1/3070],[0],[0],[0]])
@@ -96,7 +96,7 @@ class bateau():
 	  y = ledout_values_y[0] + ledout_values_y[1] * 256
 	  if y > 32767:
 	      y = y - 65536
-	  ledout_values_z = self.bus.read_i2c_block_data(DEVICE_ADDRlatlESS, OUT_Z_L,2)
+	  ledout_values_z = self.bus.read_i2c_block_data(DEVICE_ADDRESS, OUT_Z_L,2)
 	  z = ledout_values_z[0] + ledout_values_z[1] * 256
 	  if z > 32767:
 	      z = z - 65536
@@ -123,10 +123,11 @@ class bateau():
 	def regul_cap(self,capd):
 		#capd est le cap consigne
 		e = sawtooth((self.cap() - capd)*2*np.pi/360)
+		print("Erreur = ",e)
 		#v = ((abs(e)*(self.vmax - self.vmin)) / np.pi) + self.vmin
-		u1 = max(min(int(0.5*80*(1 + self.Kregulcap *e)),self.vmax),self.vmin)
-		u2 = max(min(int(0.5*80*(1 - self.Kregulcap *e)),self.vmax),self.vmin)
-		self.set_speed(u1,u2)
+		u1 = max(min(int(40*(1 + self.Kregulcap *e)),self.vmax),0)
+		u2 = max(min(int(40*(1 - self.Kregulcap *e)),self.vmax),0)
+		self.set_speed(u2,u1)
 		
 	def safety_turn(self):
 		self.set_speed(50,0)
