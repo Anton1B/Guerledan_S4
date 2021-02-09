@@ -110,6 +110,11 @@ class bateau():
 	  if cap_m2<0 :
 	    cap_m2+=360
 	  return cap_m2
+	  
+	  
+	def state(self):
+		self.position()
+		return array([[self.x],[self.y],[self.cap()]])
 
 	def set_speed(self,u1,u2):
 		ard.send_arduino_cmd_motor(self.arduino, u1, u2)
