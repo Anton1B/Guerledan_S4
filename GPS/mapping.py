@@ -72,6 +72,7 @@ def map_base_nautique():
     return ax
 
 ax = map_base_nautique()
+
 # Plot reference point: bout du ponton
 ax.scatter(-3.01473333*correction,48.19906500, c="r", s=10) 
 print(X[-1],Y[-1])
