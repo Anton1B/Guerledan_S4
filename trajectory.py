@@ -33,6 +33,7 @@ def waypoint(bateau,parcours) :
 	offset_y = first_point[1,0]
 	
 	t_init = time.time()
+	pt_P = array([[0],[0]])
 	
 	while (True) :
 	
