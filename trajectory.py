@@ -25,7 +25,12 @@ def control_potentiel(phat,qhat,x) :
     
 def waypoint(bateau,parcours) :
 	point_id = 0
-	n = len(parcours)-1
+	n = len(parcours)-1 
+	
+	first_point = parcours[0]
+	#Intitialisation des offsets
+	offset_x = first_point[0,0]
+	offset_y = first_point[1,0]
 	
 	t_init = time.time()
 	
