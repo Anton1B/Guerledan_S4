@@ -40,9 +40,9 @@ def waypoint(bateau,parcours) :
 
 		#Détermination des points de la ligne actuelle
 		if point_id-1 <0 :
-		p1 = parcours[n]
+			p1 = parcours[n]
 		else :
-		p1 = parcours[point_id-1]
+			p1 = parcours[point_id-1]
 
 		p2 = parcours[point_id]
 
@@ -56,20 +56,20 @@ def waypoint(bateau,parcours) :
 
 		#Si la cible est proche d'un point
 		if dist_X < 1 :
-		if point_id+1 > n:
-		    point_id = 0
-		else : 
-		    point_id += 1
-		#gestion des offsets
-		t0 = time.time()
-		offset_x = p2[0,0]
-		offset_y = p2[1,0]
+			if point_id+1 > n:
+			    point_id = 0
+			else : 
+			    point_id += 1
+			#gestion des offsets
+			t0 = time.time()
+			offset_x = p2[0,0]
+			offset_y = p2[1,0]
 
 		#Calcul du coefficient directeur
 		if (p1[0,0] > p2[0,0]) :
-		coef = (p1[1,0]-p2[1,0]) / (p1[0,0]-p2[0,0])
+			coef = (p1[1,0]-p2[1,0]) / (p1[0,0]-p2[0,0])
 		else :
-		coef = (p2[1,0]-p1[1,0]) / (p2[0,0]-p1[0,0])
+			coef = (p2[1,0]-p1[1,0]) / (p2[0,0]-p1[0,0])
 
 		tf = (time.time()-t0) - t_init
 		y = coef*tf #Fonction affine entre 2 points
@@ -77,7 +77,7 @@ def waypoint(bateau,parcours) :
 		pt_cons = array([[tf+offset_x],[y+offset_y]])
 
 		if p1[0,0] > p2[0,0] :
-		phat = array([[offset_x-tf],[+offset_y-y]])
+			phat = array([[offset_x-tf],[+offset_y-y]])
 
 
 		u = control(pt_cons,pt_P,X_bateau) 
