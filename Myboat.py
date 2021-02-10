@@ -3,6 +3,8 @@ import numpy as np
 from numpy import cos,sin,arctan2,pi,array
 import arduino_driver_py3 as ard
 import gps_driver_py3 as gpsdrv
+import csv
+
 DEVICE_ADDRESS = 0x1e      
 CTRL_REG1=0x20
 CTRL_REG2=0x21
@@ -47,7 +49,8 @@ LAT0 = (48.19906500)*2*pi/360
 LONG0 = (-3.01473333)*2*pi/360
 RAYON_TERRE = 6371000 #m
 class bateau():
-	def __init__(self):
+	def __init__(self,mission_name):
+		self.mission_name = mission_name
 		self.vmax = 120
 		self.vmin = 15
 		self.x = 0
@@ -55,6 +58,9 @@ class bateau():
 		self.Kregulcap = 0.2
 		self.u1 = 0
 		self.u2 = 0
+		self.lat = 0
+		self.long = 0
+		self.gps_time = 0
 		self.bus = smbus.SMBus(1)
 		self.gps = gpsdrv.init_line()
 		self.p0 = np.array([[3383],[-2221],[4617],[1/3070],[1/3070],[1/3070],[0],[0],[0]])
@@ -77,8 +83,12 @@ class bateau():
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL9_XL, 0b00111000)
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL10_C, 0b00111101)
 
+
 	def position(self):
 	    val = gpsdrv.read_gll(self.gps)
+	    self.gps_time = val[4]
+	    self.lat = val[0]
+	    self.long = val[2]
 	    lat = val[0]*2*pi/360
 	    longi = val[2]*2*pi/360	
 	    self.x = RAYON_TERRE*cos(longi)*(lat-LAT0)
@@ -135,15 +145,46 @@ class bateau():
 		
 	def safety_turn(self):
 		self.set_speed(50,0)
+	
 	def safety_return(self):
 		self.set_speed(50,50)
 
+	def add_data_2_csv(self, target):
+		""" 
+		Write class data to CSV file
+		Entries :
+		csv_name: name of the file to write
+		x: DD pos
+		y: DD pos
+		h: hour
+		u1: fan 
+		u2: fan
+		cap : X[2]
+		target: array 2D x,y a convertir en DD
+		"""
+		# Opening mission data log.
+		with open(self.mission_name,"a") as self.csv_file:
+			fieldnames=['lat','long','h','u1','u2','cap','target_x','target_y']
+			csv_writer=csv.DictWriter(self.csv_file, fieldnames=fieldnames)
+			# csv_writer = writer(self.csv_file)
+			csv_writer.writerow({	'lat': self.lat,
+								'long': self.long,
+								'h': self.gps_time,
+								'u1': self.u1,
+								'u2': self.u2,
+								'cap': self.cap(),
+								'target_x': target[0],
+								'target_y': target[1]})
+			self.csv_file.flush()
+
 def sawtooth(x):
     return (x+2*np.pi)%(2*np.pi)-np.pi
-	 
+ 
 def fp(x,p0):
     I1 = np.array([[p0[3,0],p0[6,0],p0[8,0]],
               [p0[6,0],p0[4,0],p0[7,0]],
               [p0[8,0],p0[7,0],p0[5,0]]])
     I2 = np.array([[p0[0,0]],[p0[1,0]],[p0[2,0]]])
     return I1 @ (x-I2)
+
+	

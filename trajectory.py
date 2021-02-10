@@ -48,7 +48,6 @@ def waypoint(Myboat,parcours,vo) :
 	t0 = time.time()
 	sign = 1
 	while (True) :
-	
 		X_bateau = Myboat.state() #récupération de l'état du bateau
 		#Détermination des points de la ligne actuelle
 		if point_id == 0:
@@ -92,6 +91,9 @@ def waypoint(Myboat,parcours,vo) :
 		print("ecart" , pt_cons - X_bateau[0:2,:])
 		v,psi_bar = guidage(pt_cons,pt_P,X_bateau,vo) 
 		control(Myboat,psi_bar,v)
+
+		# log data
+		Myboat.add_data_2_csv(pt_cons)
 
 	
 	

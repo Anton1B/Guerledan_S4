@@ -6,11 +6,12 @@ from numpy import array
 print("Programm Starting")
 
 t0 = time.time()
-Myboat = bateau()
+nom=str(input("Indiquer le nom de la mission"))
+Myboat = bateau(nom)
 Parcours = [np.array([[-8],[-42]]),np.array([[-30],[-30]]),np.array([[-18],[-70]])]
 #traj.triangle(Myboat)
-traj.waypoint(Myboat,Parcours,160) 
-"""
+#traj.waypoint(Myboat,Parcours,160) 
+
 
 i = 0
 X = []
@@ -30,4 +31,4 @@ print("Y moyen =", Y[49])
 Myboat.set_speed(0,0)
 print("MISSION DURATION", time.time()-t0)
 
-"""
+
