@@ -1,6 +1,7 @@
 import socket  # Import socket module
 import os
 import re
+import time
 
 
 s = socket.socket()  # Create a socket object
@@ -13,7 +14,7 @@ st = str(x)
 byt = st.encode()
 s.send(byt)
 
-# send message for hundred times
+# send message 
 while True:
     st = str(x)
     byt = st.encode()
@@ -23,6 +24,7 @@ while True:
 
     while True:
         data = s.recv(1024)
+        time.sleep(0.1)
         if data:
             print(data)
             x += 1
