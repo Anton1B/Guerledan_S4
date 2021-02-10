@@ -1,6 +1,6 @@
-from Myboat import bateau
+from Myboat import bateau,sawtooth
 import time
-from numpy import array,arctan2,pi
+from numpy import array,arctan2,pi,arctan,tan
 from numpy.linalg import norm
 def triangle(bateau):
 	t1 = time.time()
@@ -14,17 +14,26 @@ def triangle(bateau):
 	return True
 	
 	
-def control_potentiel(phat,qhat,x) :
+def guidage(phat,qhat,x,vo) :
     px = x[0:2,:] #position du bateau
 
     nq = px - qhat #composante répulsive
-    w = nq/(norm(nq)**3) - 2*(px-phat) #consigne
-
+    w = nq/(norm(nq)**3) - 2*(px-phat) + array([[vo],[vo]]) #consigne
+    v = norm(w)
     psi_bar = arctan2(w[1,0],w[0,0])
-    psi_bar = psi_bar*(180/pi)  #conversion degrés
-    return psi_bar
+    print("psi_bar",psi_bar)
+    return v,psi_bar
+def control(Myboat,psi_bar,v) :
+    u2 = min(v,240)
+
+    u1 = 20*arctan(tan((Myboat.cap()-psi_bar)/2))
+    Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
+    print("u1",u1)
+    print("u2",u2)
+
     
-def waypoint(Myboat,parcours) :
+def waypoint(Myboat,parcours,vo) :
+	#pour vo = 160
 	point_id = 1
 	n = len(parcours)-1 
 	
@@ -41,7 +50,6 @@ def waypoint(Myboat,parcours) :
 	while (True) :
 	
 		X_bateau = Myboat.state() #récupération de l'état du bateau
-		print("X_bateau",X_bateau)
 		#Détermination des points de la ligne actuelle
 		if point_id == 0:
 			p1 = parcours[n]
@@ -79,12 +87,11 @@ def waypoint(Myboat,parcours) :
 			sign = 1
 		y = sign*coef*tf
 		pt_cons = array([[sign*tf+offset_x],[y+offset_y]])
+		#print("CONSIGNE", pt_cons)
+		#print("POSBATO", X_bateau)
+		print("ecart" , pt_cons - X_bateau[0:2,:])
+		v,psi_bar = guidage(pt_cons,pt_P,X_bateau,vo) 
+		control(Myboat,psi_bar,v)
 
-		print("objectif",pt_cons)
-
-
-		u = control_potentiel(pt_cons,pt_P,X_bateau) 
-
-		Myboat.regul_cap(u)
 	
 	

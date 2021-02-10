@@ -48,11 +48,13 @@ LONG0 = (-3.01473333)*2*pi/360
 RAYON_TERRE = 6371000 #m
 class bateau():
 	def __init__(self):
-		self.vmax = 80
+		self.vmax = 120
 		self.vmin = 15
 		self.x = 0
 		self.y = 0
 		self.Kregulcap = 0.2
+		self.u1 = 0
+		self.u2 = 0
 		self.bus = smbus.SMBus(1)
 		self.gps = gpsdrv.init_line()
 		self.p0 = np.array([[3383],[-2221],[4617],[1/3070],[1/3070],[1/3070],[0],[0],[0]])
@@ -109,7 +111,7 @@ class bateau():
 	  cap_m2 = cap_m2 * (180 / np.pi)
 	  if cap_m2<0 :
 	    cap_m2+=360
-	  return cap_m2
+	  return cap_m2*2*pi/360
 	  
 	  
 	def state(self):
@@ -117,7 +119,9 @@ class bateau():
 		return array([[self.x],[self.y],[self.cap()]])
 
 	def set_speed(self,u1,u2):
-		ard.send_arduino_cmd_motor(self.arduino, u1, u2)
+		self.u1 = max(min(u1,self.vmax),self.vmin)
+		self.u2 = max(min(u2,self.vmax),self.vmin)
+		ard.send_arduino_cmd_motor(self.arduino, self.u1, self.u2)
 		return True
 
 	def regul_cap(self,capd):
