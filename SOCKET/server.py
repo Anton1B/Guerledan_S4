@@ -5,7 +5,7 @@ from roblib_rob import *
 port = 50000  # Reserve a port for your service every new transfer wants a new port or you must wait.
 s = socket.socket()  # Create a socket object
 host = ""  # Get local machine name
-s.bind(('localhost', port))  # Bind to the port
+s.bind(('172.20.26.195', port))  # Bind to the port mon adresse ip
 s.listen(5)  # Now wait for client connection.
 
 print('Server listening....')
@@ -17,7 +17,6 @@ fig.canvas.set_window_title('Relevé coordonnées GPS')
 
 while True:
     conn, address = s.accept()  # Establish connection with client.
-    
     while True:
         try:
             print('Got connection from', address)
@@ -28,8 +27,8 @@ while True:
             conn.send(byt)
             x += 1
             ax.scatter(float(data),2,zorder=1, alpha= 0.2, c="b", s=10)
-            
             pause(0.1)
+            
         except Exception as e:
             print(e)
             break

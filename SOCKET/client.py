@@ -7,7 +7,7 @@ import time
 s = socket.socket()  # Create a socket object
 port = 50000  # Reserve a port for your service every new transfer wants a new port or you must wait.
 
-s.connect(('127.0.0.1', port))
+s.connect(('172.20.26.195', port)) # set ip adress to reach (your computer)
 x = 0
 
 st = str(x)
@@ -18,20 +18,17 @@ s.send(byt)
 while True:
     st = str(x)
     byt = st.encode()
-    s.send(byt)
+    s.send(byt) 
+    # while True:
+    data = s.recv(1024)
+    time.sleep(0.1)
+    if data:
+        print(data)
+        x += 1
+        break
 
-    print(x)
-
-    while True:
-        data = s.recv(1024)
-        time.sleep(0.1)
-        if data:
-            print(data)
-            x += 1
-            break
-
-        else:
-            print('no data received')
+    else:
+        print('no data received')
 
 
 print('closing')
