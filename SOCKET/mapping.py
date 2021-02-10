@@ -9,6 +9,7 @@ import csv
 from roblib_rob import *
 import os
 
+from conversion_toolbox import *
 import random
 
 X=[]
@@ -17,25 +18,6 @@ Z=[]
 
 # lien intéressant conversion des données
 # https://www.pgc.umn.edu/apps/convert/
-
-def latDD(y):
-	D = int(y/100%100) #int(x[0:2])
-	M = int((y-D*100)%100)
-	S = int((y-D*100-M)*10000)
-	DD = D +(float(M)+float(S)/10000)/60
-	return DD
-
-def longDD(y):
-	if y != 0.0:
-		D = int(y/100%100)	#int(x[0:1])
-		M = int((y-D*100)%100)#int(x[1:3])
-		S = int((y-D*100-M)*10000)#float(x[4:])
-		DD = D +(float(M)+float(S)/10000)/60
-		return -DD
-	return 0
-
-correction = 1
-# correction = np.cos(48*np.pi/180) A REVOIR AVEC YOHANN
 
 # Reading all file.
 # with open("data_gps2.csv","r") as csv_file: # read csv file: GPS log. 
@@ -52,11 +34,15 @@ def get_last_line_csv():
     # Update last file from boat
     os.system('rsync --rsh="sshpass -p ue32 ssh -l ue32" 172.20.25.210:S4_odo_klein_bet/GPS/data_gps2.csv /home/jvk/Bureau/Guerledan_S4/SOCKET')
     # os.system('sleep $1')
-    with open("/home/jvk/Bureau/Guerledan_S4/SOCKET/data_gps2.csv","r") as csv_file: # read csv file: GPS log. 
+    with open("/home/jvk/Bureau/Guerledan_S4/SOCKET/mission1.csv","r") as csv_file: # read csv file: GPS log. 
         data = csv_file.readlines() 
     lastRow = data[-1] 
     lastRow = lastRow.split(",")
-    return latDD(float(lastRow[0])),longDD(float(lastRow[1]))
+    x=float(lastRow[-2][1:-1])
+    y=float(lastRow[-1][1:-2])
+    # print(y)
+    ly,lx = xy_2_DD(x,y)
+    return float(lastRow[0]),float(lastRow[1]),ly,lx
 
 def map_base_nautique():
     # Creating new plot window.
@@ -64,7 +50,7 @@ def map_base_nautique():
     fig.canvas.set_window_title('Relevé coordonnées GPS')
 
     # Get OSM map tile and display it using matplotlib library
-    BBox = ((-3.018064498901367*correction,-3.013585209846497*correction,48.19794588711593,48.19947447698833)) # define BBox, the area defined by the map.
+    BBox = ((-3.018064498901367,-3.013585209846497,48.19794588711593,48.19947447698833)) # define BBox, the area defined by the map.
     map = plt.imread("map.png")
 
     # Plot data.
@@ -81,13 +67,16 @@ def map_base_nautique():
 ax = map_base_nautique()
 
 # Plot reference point: bout du ponton
-ax.scatter(-3.01473333*correction,48.19906500, c="r", s=10) 
+ax.scatter(-3.01473333,48.19906500, c="r", s=10) 
 
 # Progressive ploting
 while True:
     data_xy = get_last_line_csv()
-    print(data_xy)
+    # print(data_xy)
+    # print(data_xy)
     ax.scatter(data_xy[1],data_xy[0],zorder=1, alpha= 0.2, c="b", s=10)
+    ax.scatter(data_xy[3],data_xy[2],zorder=1, alpha= 0.2, c="g", s=10)
+
     plt.pause(0.001)
 
 plt.show()
