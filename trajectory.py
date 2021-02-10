@@ -30,7 +30,62 @@ def control(Myboat,psi_bar,v) :
     Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
     print("u1",u1)
     print("u2",u2)
+def guidage_v2(phat,qhat,x,vo) :
+    px = x[0:2,:] #position du bateau
 
+    nq = px - qhat #composante répulsive
+    w = nq/(norm(nq)**3) - 0.1*(px-phat) + vo #consigne
+    v = norm(w)
+    psi_bar = arctan2(w[1,0],w[0,0])
+    print("psi_bar",psi_bar)
+    return v,psi_bar
+
+def control_v2(Myboat,psi_bar,v):
+    u2 = min(v*160,240)
+
+    u1 = 20*arctan(tan((Myboat.cap()-psi_bar)/2))
+    Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
+    print("u1",u1)
+    print("u2",u2)
+
+def waypoint2(Myboat,parcours,vo):
+	#On suppose vo = 1 m.s-1 pour les hélices à 80 de forces
+	def f(t,xo,yo,a,b):
+		return array([[xo + t*a],[yo+t*b]])
+	def determine_a_b(p_i,p_f,vo):
+		d = norm(p_f-p_i)
+		a = (p_f[0,0]-p_i[0,0])*d/vo
+		b = (p_f[1,0]-p_i[1,0])*d/vo
+		return a,b
+	to = time.time()
+	i_p = 1
+	p_i = parcours[0]
+	p_f = parcours[1]
+	a,b = determine_a_b(p_i,p_f,vo)
+	vhat = array([[a*vo/((a**2+b**2)**(1/2))],[b*vo/((a**2+b**2)**(1/2))]])
+	print("a = ", a)
+	print("b = ", b)
+	print("vhat = ",vhat)
+	pt_cons = f(0,p_i[0,0],pi_[1,0],a,b)
+	while True:
+		if norm(pt_cons-p_f) <0.1:
+			p_i = p_f
+			i_p +=1
+			p_f = parcours[i_p%3]
+			a,b = determine_a_b(p_i,p_f,vo)
+			vhat = array([[a*vo/((a**2+b**2)**(1/2))],[b*vo/((a**2+b**2)**(1/2))]])
+			print("a = ", a)
+			print("b = ", b)
+			print(vhat)
+			to = time.time()
+		pt_cons = f(time.time()-to,p_i[0,0],pi_[1,0],a,b)
+		X_bateau = Myboat.state()
+		v,psi_bar = guidage_v2(pt_cons,array([[-2],[-2]]),X_bateau,vhat)
+		control(Myboat,psi_bar,v)
+		# log data
+		Myboat.add_data_2_csv(pt_cons)		
+		
+		
     
 def waypoint(Myboat,parcours,vo) :
 	#pour vo = 160
