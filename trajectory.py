@@ -4,12 +4,16 @@ from numpy import array,arctan2,pi,arctan,tan
 from numpy.linalg import norm
 def triangle(bateau):
 	t1 = time.time()
+	pt_cons = array([[0],[0]])
 	while t1+20>time.time():
-		bateau.regul_cap(120)
+		bateau.regul_cap(2*pi/3)
+		bateau.add_data_2_csv(pt_cons)
 	while t1+40>time.time():
-		bateau.regul_cap(240)
+		bateau.regul_cap(4*pi/3)
+		bateau.add_data_2_csv(pt_cons)
 	while t1+60>time.time():
-		bateau.regul_cap(0)
+		bateau.regul_cap(2*pi)
+		bateau.add_data_2_csv(pt_cons)
 	bateau.set_speed(0,0)
 	return True
 	
@@ -18,30 +22,29 @@ def guidage(phat,qhat,x,vo) :
     px = x[0:2,:] #position du bateau
 
     nq = px - qhat #composante répulsive
-    w = nq/(norm(nq)**3) - 2*(px-phat) + array([[vo],[vo]]) #consigne
-    v = norm(w)
+    w = nq/(norm(nq)**3) - 20*(px-phat) + vo #consigne
+    v = norm(w) 
     psi_bar = arctan2(w[1,0],w[0,0])
     print("psi_bar",psi_bar)
     return v,psi_bar
-def control(Myboat,psi_bar,v) :
-    u2 = min(v,240)
 
-    u1 = 20*arctan(tan((Myboat.cap()-psi_bar)/2))
-    Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
-    print("u1",u1)
-    print("u2",u2)
 def guidage_v2(phat,qhat,x,vo) :
     px = x[0:2,:] #position du bateau
 
     nq = px - qhat #composante répulsive
-    w = nq/(norm(nq)**3) - 0.1*(px-phat) + vo #consigne
+    w = nq/(norm(nq)**3) - 0.01*(px-phat) + vo #consigne
     v = norm(w)
     psi_bar = arctan2(w[1,0],w[0,0])
-    print("psi_bar",psi_bar)
     return v,psi_bar
 
 def control_v2(Myboat,psi_bar,v):
     u2 = min(v*160,240)
+
+    u1 = 20*arctan(tan((Myboat.cap()-psi_bar)/2))
+    Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
+
+def control(Myboat,psi_bar,v) :
+    u2 = min(v,240)
 
     u1 = 20*arctan(tan((Myboat.cap()-psi_bar)/2))
     Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
@@ -54,8 +57,8 @@ def waypoint2(Myboat,parcours,vo):
 		return array([[xo + t*a],[yo+t*b]])
 	def determine_a_b(p_i,p_f,vo):
 		d = norm(p_f-p_i)
-		a = (p_f[0,0]-p_i[0,0])*d/vo
-		b = (p_f[1,0]-p_i[1,0])*d/vo
+		a = (p_f[0,0]-p_i[0,0])*vo/d
+		b = (p_f[1,0]-p_i[1,0])*vo/d
 		return a,b
 	to = time.time()
 	i_p = 1
@@ -66,27 +69,38 @@ def waypoint2(Myboat,parcours,vo):
 	print("a = ", a)
 	print("b = ", b)
 	print("vhat = ",vhat)
-	pt_cons = f(0,p_i[0,0],pi_[1,0],a,b)
+	pt_cons = f(0,p_i[0,0],p_i[1,0],a,b)
 	while True:
-		if norm(pt_cons-p_f) <0.1:
+		if norm(pt_cons-p_f) <0.5:
 			p_i = p_f
 			i_p +=1
-			p_f = parcours[i_p%3]
+			p_f = parcours[i_p%len(parcours)]
 			a,b = determine_a_b(p_i,p_f,vo)
 			vhat = array([[a*vo/((a**2+b**2)**(1/2))],[b*vo/((a**2+b**2)**(1/2))]])
 			print("a = ", a)
 			print("b = ", b)
 			print(vhat)
 			to = time.time()
-		pt_cons = f(time.time()-to,p_i[0,0],pi_[1,0],a,b)
+		pt_cons = f(time.time()-to,p_i[0,0],p_i[1,0],a,b)
 		X_bateau = Myboat.state()
 		v,psi_bar = guidage_v2(pt_cons,array([[-2],[-2]]),X_bateau,vhat)
-		control(Myboat,psi_bar,v)
+		control_v2(Myboat,psi_bar,v)
+		print("ecart" , pt_cons - X_bateau[0:2,:])
+		print("X_bateau" ,X_bateau[0:2,:])
+		print("CONSIGNE" , pt_cons)
 		# log data
 		Myboat.add_data_2_csv(pt_cons)		
 		
 		
-    
+	
+def unpoint(Bateau,point):
+	while True :
+		X_Bateau = Bateau.state()
+		v,psi_bar = guidage(point,array([[0],[1]]),X_Bateau,160)
+		control(Bateau,psi_bar,v)
+		Bateau.add_data_2_csv(point)  
+		print("ecart" , point - X_Bateau[0:2,:])
+		
 def waypoint(Myboat,parcours,vo) :
 	#pour vo = 160
 	point_id = 1
@@ -144,6 +158,8 @@ def waypoint(Myboat,parcours,vo) :
 		#print("CONSIGNE", pt_cons)
 		#print("POSBATO", X_bateau)
 		print("ecart" , pt_cons - X_bateau[0:2,:])
+		
+		vo = v_p1p2
 		v,psi_bar = guidage(pt_cons,pt_P,X_bateau,vo) 
 		control(Myboat,psi_bar,v)
 

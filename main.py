@@ -8,11 +8,15 @@ print("Programm Starting")
 t0 = time.time()
 nom=str(input("Indiquer le nom de la mission"))
 Myboat = bateau(nom)
-Parcours = [np.array([[-8],[-42]]),np.array([[-30],[-30]]),np.array([[-18],[-70]])]
+
+Myboat.set_speed(0,0)
+time.sleep(4)
+Parcours = [np.array([[-30],[-50]]),np.array([[-50],[-30]])]#,np.array([[-20],[-20]])]
 #traj.triangle(Myboat)
-#traj.waypoint(Myboat,Parcours,160) 
-
-
+#traj.waypoint(Myboat,Parcours,160)
+#traj.unpoint(Myboat,array([[-60],[-60]]))
+traj.waypoint2(Myboat, Parcours,1)
+"""
 i = 0
 X = []
 Y = []
@@ -29,6 +33,6 @@ Y.sort()
 print("X moyen =", X[49])
 print("Y moyen =", Y[49])
 Myboat.set_speed(0,0)
-print("MISSION DURATION", time.time()-t0)
+print("MISSION DURATION", time.time()-t0)"""
 
 

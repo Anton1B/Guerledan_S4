@@ -52,7 +52,7 @@ class bateau():
 	def __init__(self,mission_name):
 		self.mission_name = mission_name
 		self.vmax = 120
-		self.vmin = 15
+		self.vmin = 0
 		self.x = 0
 		self.y = 0
 		self.Kregulcap = 0.2
@@ -91,8 +91,8 @@ class bateau():
 	    self.long = val[2]
 	    lat = val[0]*2*pi/360
 	    longi = val[2]*2*pi/360	
-	    self.x = RAYON_TERRE*cos(longi)*(lat-LAT0)
-	    self.y = RAYON_TERRE*(longi-LONG0)
+	    self.x = RAYON_TERRE*np.cos(lat)*(longi-LONG0)
+	    self.y = RAYON_TERRE*(lat-LAT0)
 
 	def cap(self):
 	  self.bus.write_i2c_block_data(DEVICE_ADDRESS, CTRL_REG4, [0b00000000])
@@ -137,7 +137,6 @@ class bateau():
 	def regul_cap(self,capd):
 		#capd est le cap consigne
 		e = sawtooth((self.cap() - capd)*2*np.pi/360)
-		print("Erreur = ",e)
 		#v = ((abs(e)*(self.vmax - self.vmin)) / np.pi) + self.vmin
 		u1 = max(min(int(40*(1 + self.Kregulcap *e)),self.vmax),0)
 		u2 = max(min(int(40*(1 - self.Kregulcap *e)),self.vmax),0)
