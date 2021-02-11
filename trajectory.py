@@ -18,15 +18,23 @@ def triangle(bateau):
 	return True
 	
 	
-def guidage(phat,qhat,x,vo) :
+def guidage(Myboat,phat,qhat,x,vo) :
     px = x[0:2,:] #position du bateau
 
     nq = px - qhat #composante répulsive
-    w = nq/(norm(nq)**3) - 20*(px-phat) + vo #consigne
-    v = norm(w) 
+    w = nq/(norm(nq)**3) - 8*(px-phat) + vo #consigne
+    
+    vbar = norm(w) 
     psi_bar = arctan2(w[1,0],w[0,0])
+    
+    v_phatbateau = array([[x[0,0]-phat[0,0]],[x[1,0]-phat[1,0]]])
+    
+    v = (Myboat.u1 + Myboat.u2)*0.8/160
+    
+    v_cons = norm(v_phatbateau)*vbar/(norm(v0)) - v
+    
     print("psi_bar",psi_bar)
-    return v,psi_bar
+    return v_cons,psi_bar
 
 def guidage_v2(phat,qhat,x,vo) :
     px = x[0:2,:] #position du bateau
@@ -43,10 +51,10 @@ def control_v2(Myboat,psi_bar,v):
     u1 = 20*arctan(tan((Myboat.cap()-psi_bar)/2))
     Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
 
-def control(Myboat,psi_bar,v) :
-    u2 = min(v,240)
-
-    u1 = 20*arctan(tan((Myboat.cap()-psi_bar)/2))
+def control(Myboat,psi_bar,v_cons) :
+    u2 = min(v_cons,240) #vitesse
+    u1 = 10*arctan(tan((psi_bar-Myboat.cap())/2)) #orientation
+    
     Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
     print("u1",u1)
     print("u2",u2)
@@ -160,8 +168,8 @@ def waypoint(Myboat,parcours,vo) :
 		print("ecart" , pt_cons - X_bateau[0:2,:])
 		
 		vo = v_p1p2
-		v,psi_bar = guidage(pt_cons,pt_P,X_bateau,vo) 
-		control(Myboat,psi_bar,v)
+		v_cons,psi_bar = guidage(Myboat,pt_cons,pt_P,X_bateau,vo) 
+		control(Myboat,psi_bar,v_cons)
 
 		# log data
 		Myboat.add_data_2_csv(pt_cons)
