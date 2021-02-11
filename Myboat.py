@@ -154,6 +154,19 @@ class bateau():
 		u2 = max(min(int(40*(1 - self.Kregulcap *e)),self.vmax),0)
 		self.set_speed(u2,u1)
 		
+	def regul_cap_lundi(self,capd):
+		#capd est le cap consigne
+		print("écart : " , self.cap() - capd)
+		e = 2*sawtooth((self.cap() - capd))
+		
+		print("erreur psi", e)
+		#v = ((abs(e)*(self.vmax - self.vmin)) / np.pi) + self.vmin
+		u1 = max(min(int(80*(1 + self.Kregulcap *e)),self.vmax),self.vmin)
+		u2 = max(min(int(80*(1 - self.Kregulcap *e)),self.vmax),self.vmin)
+		#self.set_speed(50,0)
+		#print(u1, " ", u2)
+		return u1,u2
+		
 	def safety_turn(self):
 		self.set_speed(50,0)
 	
