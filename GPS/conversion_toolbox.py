@@ -1,3 +1,5 @@
+# lien intéressant conversion des données
+# https://www.pgc.umn.edu/apps/convert/
 
 import numpy as np
 
@@ -50,26 +52,26 @@ def DD_2_cartesian(lat_DD,longi_DD):
     y = RAYON_TERRE*(lat-LAT0)
     return (x,y)
 
-# if __name__=="__main__":
+if __name__=="__main__":
 
-#     # valeur en Degré minute - point au hasard (récupéré dans le log GPS)
-#     N = 4811.9378
-#     W = 300.9161
-#     print("Degré Minute",(N,W))
+    # valeur en Degré minute - point au hasard (récupéré dans le log GPS)
+    N = 4811.9378
+    W = 300.9161
+    print("Degré Minute",(N,W))
 
-#     # conversion en Degré décimal (DD)
-#     # 48.19893833333333 N, 3.0148733333333335 W
-#     N_DD = latDD(N)
-#     W_DD = longDD(W)
-#     print("Degré décimal",(N_DD,W_DD))
+    # conversion en Degré décimal (DD)
+    # 48.19893833333333 N, 3.0148733333333335 W
+    N_DD = latDD(N)
+    W_DD = longDD(W)
+    print("Degré décimal",(N_DD,W_DD))
 
-#     # conversion en cartésien
-#     xy = DD_2_cartesian(N_DD,W_DD) # tuple
-#     print("Cartésien",xy)
+    # conversion en cartésien
+    xy = DD_2_cartesian(N_DD,W_DD) # tuple
+    print("Cartésien",xy)
 
-#     # back to DD (for visual representation)
-#     lxly = xy_2_DD(xy[0],xy[1])
-#     # lxly = xy_2_DD(5,5)
-#     print("Degré Décimal:",lxly)
+    # back to DD (for visual representation)
+    lxly = xy_2_DD(xy[0],xy[1])
+    # lxly = xy_2_DD(5,5)
+    print("Degré Décimal:",lxly)
 
-#     print(DD_2_cartesian(lxly[0],lxly[1]))
+    print(DD_2_cartesian(lxly[0],lxly[1]))

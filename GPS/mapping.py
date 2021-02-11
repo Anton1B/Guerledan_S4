@@ -14,58 +14,49 @@ import socket  # Import socket module
 import os
 import re
 import time
+from conversion_toolbox import *
 
-
+# BOAT
 X=[]
 Y=[]
-Z=[]
 
-# lien intéressant conversion des données
-# https://www.pgc.umn.edu/apps/convert/
+# TARGET
+X_target=[]
+Y_target=[]
+
 
 # Opening socket
-s = socket.socket()  # Create a socket object
-port = 50000  # Reserve a port for your service every new transfer wants a new port or you must wait.
+# s = socket.socket()  # Create a socket object
+# port = 50000  # Reserve a port for your service every new transfer wants a new port or you must wait.
 
-s.connect(('172.20.26.195', port)) # set ip adress to reach (your computer)
-t = 0
+# s.connect(('172.20.26.195', port)) # set ip adress to reach (your computer)
+# t = 0
 
-st = str(t)
-byt = st.encode()
-s.send(byt)
-
-def latDD(y):
-    """
-    Convert latitude DDM (degrees decimal minutes) to DD (decimal degrees).
-    """
-    x=(y)
-    D=int(x[0:2])
-    M=int(x[2:4])
-    S=float(x[5:])
-    DD = D +(float(M)+float(S)/10000)/60
-    return DD
-
-def longDD(y):
-    """
-    Convert longitude DDM (degrees decimal minutes) to DD (decimal degrees).
-    """
-    x=(y)
-    D=int(x[0:1])
-    M=int(x[1:3])
-    S=float(x[4:])
-    DD = D +(float(M)+float(S)/10000)/60
-    return -DD*correction
+# st = str(t)
+# byt = st.encode()
+# s.send(byt)
 
 correction = 1
 # correction = np.cos(48*np.pi/180) A REVOIR AVEC YOHANN
 
-with open("History/gps-0902-guerledan.csv","r") as csv_file: # read csv file: GPS log. 
+with open("History/anto/khkgl.csv","r") as csv_file: # read csv file: GPS log. 
     csv_reader = csv.reader(csv_file,delimiter=",")
     for lines in csv_reader:
-        if float(lines[0])!=0.0:
-            X.append(latDD(lines[0]))  # store lattitude in X to plot 
+        if float(lines[0])!=0.0: # type(lines[0])=str
+            X.append(float(lines[0]))  # store lattitude in X to plot 
         if float(lines[1])!=0.0:
-            Y.append(longDD(lines[1])) # store longitude in Y to plot
+            Y.append(float(lines[1])) # store longitude in Y to plot
+        
+        x=float(lines[-2][1:-1])
+        y=float(lines[-1][1:-1])
+        ly,lx = xy_2_DD(x,y)
+        # print("longitude:",lx)
+        # print("latitude:",ly)
+
+        if float(lx)!=0.0: # type(lines[0])=str
+            Y_target.append(lx)  # store lattitude in X to plot 
+        if float(ly)!=0.0:
+            X_target.append(ly) # store longitude in Y to plot
 
 def map_base_nautique():
     # Creating new plot window.
@@ -81,34 +72,35 @@ def map_base_nautique():
 
     # Plot parameters.
     ax.set_title("Base nautique de Guerlédan")
-    ax.set_xlim(BBox[0],BBox[1])
-    ax.set_ylim(BBox[2],BBox[3])
+    ax.set_xlim(BBox[0],BBox[1]) # longitude min,max on graph
+    ax.set_ylim(BBox[2],BBox[3]) # latitude min,max on graph
 
     ax.imshow(map, zorder=0, extent = BBox, aspect= "equal")
     return ax
 
-# ax = map_base_nautique()
+ax = map_base_nautique()
 
 # Plot reference point: bout du ponton
-# ax.scatter(-3.01473333*correction,48.19906500, c="r", s=10) 
-print(X[-1],Y[-1])
+ax.scatter(-3.01473333*correction,48.19906500, c="r", s=10) 
+# print(X[-1],Y[-1])
 
 # Progressive ploting
-# for t in np.arange(0,1000,1):
-while True:
-    # ax.scatter(Y[t],X[t],zorder=1, alpha= 0.2, c="b", s=10)
-    st = str(Y[t])
-    byt = st.encode()
-    s.send(byt) 
+for t in np.arange(0,len(X),1):
+# while True:
+    ax.scatter(Y[t],X[t],zorder=1, alpha= 0.2, c="b", s=10)
+    ax.scatter(Y_target[t],X_target[t],zorder=1, alpha= 0.2, c="g", s=10)
+
+    # st = str(Y[t])
+    # byt = st.encode()
+    # s.send(byt) 
     # while True:
-    data = s.recv(1024)
-    time.sleep(0.1)
-    if data:
-        # print(data)
-        t += 1
-        break
-    else:
-        print('no data received')
+    # data = s.recv(1024)
+    # if data:
+    #     # print(data)
+    #     t += 1
+    #     break
+    # else:
+    #     print('no data received')
     plt.pause(0.001)
 
 plt.show()

@@ -73,10 +73,10 @@ if __name__=="__main__":
     except ConnectionRefusedError:
         print ("Connexion impossible")
 
-    for i in range(3):
+    for i in range(100):
         # X=array([[1],[2],[3]])
-        X=(1,2,3,4)
-
+        X=(48.19880166666667,-3.014775,171756.0,116.102435927,120,3.8172964713,-10.00474396,-25.00118599)
+        
         # Envoi du message
         try:
             send_msg(str(X).encode('utf-8'))
