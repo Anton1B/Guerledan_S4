@@ -4,6 +4,8 @@ from numpy import cos,sin,arctan2,pi,array
 import arduino_driver_py3 as ard
 import gps_driver_py3 as gpsdrv
 import csv
+import socket
+import time
 
 DEVICE_ADDRESS = 0x1e      
 CTRL_REG1=0x20
@@ -48,7 +50,9 @@ OUT_Z_L = 0b00101100
 LAT0 = (48.19906500)*2*pi/360
 LONG0 = (-3.01473333)*2*pi/360
 RAYON_TERRE = 6371000 #m
+
 class bateau():
+
 	def __init__(self,mission_name):
 		self.mission_name = mission_name
 		self.vmax = 120
@@ -82,7 +86,16 @@ class bateau():
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL8_XL, 0b10100101)
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL9_XL, 0b00111000)
 		self.bus.write_byte_data(ACCEL_ADRESS,CTRL10_C, 0b00111101)
-
+		# open socket comunication
+		# Attempt connexion to server.
+		try:
+			self.HOST = ('172.20.26.195') # Mettre ton addresse IP (ifconfig)
+			self.PORT = 50000
+			self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.client.connect((self.HOST, self.PORT))
+			print ('Connexion vers ' + self.HOST + ':' + str(self.PORT) + ' reussie.')
+		except ConnectionRefusedError:
+			print ("Connexion impossible")
 
 	def position(self):
 	    val = gpsdrv.read_gll(self.gps)
@@ -123,7 +136,6 @@ class bateau():
 	    cap_m2+=360
 	  return cap_m2*2*pi/360
 	  
-	  
 	def state(self):
 		self.position()
 		return array([[self.x],[self.y],[self.cap()]])
@@ -147,6 +159,21 @@ class bateau():
 	
 	def safety_return(self):
 		self.set_speed(50,50)
+	
+	def send_msg(self,message):
+		time.sleep(0.1)
+		# message = (b'Hello, world')
+		# print (b'Envoi de :' + message)
+		n = self.client.send(message)
+		if (n != len(message)):
+				print ('Erreur envoi.')
+		else:
+				print ('Envoi ok.')
+		# print ('Reception...')
+		# donnees = client.recv(1024)
+		# print ('Recu :', donnees)
+		# print ('Deconnexion.')
+		# client.close()
 
 	def add_data_2_csv(self, target):
 		""" 
@@ -162,7 +189,7 @@ class bateau():
 		target: array 2D x,y a convertir en DD
 		"""
 		# Opening mission data log.
-		with open(self.mission_name,"a") as self.csv_file:
+		with open("./gps_data_logs/"+self.mission_name + ".csv","a") as self.csv_file:
 			fieldnames=['lat','long','h','u1','u2','cap','target_x','target_y']
 			csv_writer=csv.DictWriter(self.csv_file, fieldnames=fieldnames)
 			# csv_writer = writer(self.csv_file)
@@ -175,6 +202,14 @@ class bateau():
 								'target_x': target[0],
 								'target_y': target[1]})
 			self.csv_file.flush()
+
+		# a tester. envoie message au serveur.
+		test = (self.lat,self.long,self.gps_time,self.u1,self.u2,self.cap(),target[0][0],target[1][0])
+		try:
+			pass
+			self.send_msg(str(test).encode('utf-8'))
+		except BrokenPipeError:
+			pass
 
 def sawtooth(x):
     return (x+2*np.pi)%(2*np.pi)-np.pi

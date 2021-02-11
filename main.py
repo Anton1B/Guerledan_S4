@@ -12,10 +12,11 @@ Myboat = bateau(nom)
 Myboat.set_speed(0,0)
 time.sleep(4)
 Parcours = [np.array([[-30],[-50]]),np.array([[-50],[-30]])]#,np.array([[-20],[-20]])]
-#traj.triangle(Myboat)
+traj.triangle(Myboat)
 #traj.waypoint(Myboat,Parcours,160)
-#traj.unpoint(Myboat,array([[-60],[-60]]))
-traj.waypoint2(Myboat, Parcours,1)
+#traj.unpoint(Myboat,array([[-30],[-30]]))
+#traj.unpoint_v2(Myboat,array([[-30],[-30]]))
+#traj.waypoint2(Myboat, Parcours,1)
 """
 i = 0
 X = []

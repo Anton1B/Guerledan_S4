@@ -6,14 +6,11 @@ def triangle(bateau):
 	t1 = time.time()
 	pt_cons = array([[0],[0]])
 	while t1+20>time.time():
-		bateau.regul_cap(2*pi/3)
-		bateau.add_data_2_csv(pt_cons)
+		control(bateau,2*pi/3,50)
 	while t1+40>time.time():
-		bateau.regul_cap(4*pi/3)
-		bateau.add_data_2_csv(pt_cons)
+		control(bateau,4*pi/3,50)
 	while t1+60>time.time():
-		bateau.regul_cap(2*pi)
-		bateau.add_data_2_csv(pt_cons)
+		control(bateau,0,50)
 	bateau.set_speed(0,0)
 	return True
 	
@@ -29,11 +26,12 @@ def guidage(Myboat,phat,qhat,x,vo) :
     
     v_phatbateau = array([[x[0,0]-phat[0,0]],[x[1,0]-phat[1,0]]])
     
-    v = (Myboat.u1 + Myboat.u2)*0.8/160
+    v = Myboat.u1 + Myboat.u2
     
-    v_cons = norm(v_phatbateau)*vbar/(norm(v0)) - v
+    v_cons = abs(norm(v_phatbateau)*vbar/(norm(vo))) #- v
     
-    print("psi_bar",psi_bar)
+    #print("psi_bar",psi_bar)
+    print("v_cons : ",v_cons)
     return v_cons,psi_bar
 
 def guidage_v2(phat,qhat,x,vo) :
@@ -48,16 +46,24 @@ def guidage_v2(phat,qhat,x,vo) :
 def control_v2(Myboat,psi_bar,v):
     u2 = min(v*160,240)
 
-    u1 = 20*arctan(tan((Myboat.cap()-psi_bar)/2))
+    u1 = 10*arctan(tan((Myboat.cap()-psi_bar)/2))
     Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
 
 def control(Myboat,psi_bar,v_cons) :
-    u2 = min(v_cons,240) #vitesse
-    u1 = 10*arctan(tan((psi_bar-Myboat.cap())/2)) #orientation
+    u2 = min(v_cons*3,240) #vitesse
     
-    Myboat.set_speed((u2-u1)/2,(u2+u1)/2)
-    print("u1",u1)
-    print("u2",u2)
+    
+    u1 = 80*arctan(tan((psi_bar-Myboat.cap())/2)) #orientation
+    p1 = int((u2-u1)*0.5)
+    p2 = int((u2+u1)*0.5)
+    
+    Myboat.set_speed(p2,p1)
+    print("p2 : ", p2)
+    print("p1 : ", p1)
+    print("")
+    
+    #print("u1",u1)
+    #print("u2",u2)
 
 def waypoint2(Myboat,parcours,vo):
 	#On suppose vo = 1 m.s-1 pour les hélices à 80 de forces
@@ -104,8 +110,16 @@ def waypoint2(Myboat,parcours,vo):
 def unpoint(Bateau,point):
 	while True :
 		X_Bateau = Bateau.state()
-		v,psi_bar = guidage(point,array([[0],[1]]),X_Bateau,160)
+		v,psi_bar = guidage(Bateau,point,array([[0],[1]]),X_Bateau,160)
 		control(Bateau,psi_bar,v)
+		Bateau.add_data_2_csv(point)  
+		print("ecart" , point - X_Bateau[0:2,:])
+		
+def unpoint_v2(Bateau,point):
+	while True :
+		X_Bateau = Bateau.state()
+		v,psi_bar = guidage_v2(point,array([[0],[1]]),X_Bateau,1)
+		control_v2(Bateau,psi_bar,v)
 		Bateau.add_data_2_csv(point)  
 		print("ecart" , point - X_Bateau[0:2,:])
 		
